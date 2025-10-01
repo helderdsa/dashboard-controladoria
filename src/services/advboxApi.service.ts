@@ -27,6 +27,13 @@ export interface TarefaPorTipo {
   tarefas: Tarefa[];
 }
 
+// Interface para o resumo de tarefas por tipo (completas e incompletas)
+export interface ResumoTarefasPorTipo {
+  tipo: string;
+  completas: number;
+  incompletas: number;
+}
+
 // Serviço de colaboradores
 export const advboxApiService = {
   //GET All Tasks

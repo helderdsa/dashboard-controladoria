@@ -4,34 +4,51 @@ import {
   advboxApiService,
   type Colaborador,
   type Tarefa,
-  type TarefaPorTipo,
+  type ResumoTarefasPorTipo,
 } from "../../services/advboxApi.service";
 import Modal from "../modal/Modal";
 import { BarChart } from "@mui/x-charts";
 
 const ITEMS_PER_PAGE = 10;
 
-// Função para agrupar tarefas por tipo e contar
-const agruparTarefasPorTipo = (tarefas: Tarefa[]): TarefaPorTipo[] => {
-  const agrupamento = tarefas.reduce((acc, tarefa) => {
-    const tipo = tarefa.task || "Sem tipo";
+// Função para agrupar tarefas completas e incompletas por tipo em um único array
+const agruparTarefasCompletasEIncompletas = (
+  tarefasCompletas: Tarefa[],
+  tarefasIncompletas: Tarefa[]
+): ResumoTarefasPorTipo[] => {
+  const agrupamento: Record<string, ResumoTarefasPorTipo> = {};
 
-    if (!acc[tipo]) {
-      acc[tipo] = {
+  // Processar tarefas completas
+  tarefasCompletas.forEach((tarefa) => {
+    const tipo = tarefa.task || "Sem tipo";
+    if (!agrupamento[tipo]) {
+      agrupamento[tipo] = {
         tipo,
-        quantidade: 0,
-        tarefas: [],
+        completas: 0,
+        incompletas: 0,
       };
     }
+    agrupamento[tipo].completas++;
+  });
 
-    acc[tipo].quantidade++;
-    acc[tipo].tarefas.push(tarefa);
+  // Processar tarefas incompletas
+  tarefasIncompletas.forEach((tarefa) => {
+    const tipo = tarefa.task || "Sem tipo";
+    if (!agrupamento[tipo]) {
+      agrupamento[tipo] = {
+        tipo,
+        completas: 0,
+        incompletas: 0,
+      };
+    }
+    agrupamento[tipo].incompletas++;
+    
+  });
 
-    return acc;
-  }, {} as Record<string, TarefaPorTipo>);
-
-  // Converter objeto em array e ordenar por quantidade (decrescente)
-  return Object.values(agrupamento).sort((a, b) => b.quantidade - a.quantidade);
+  // Converter objeto em array e ordenar por total (decrescente)
+  return Object.values(agrupamento).sort(
+    (a, b) => b.completas + b.incompletas - (a.completas + a.incompletas)
+  );
 };
 
 const ListaColaboradores = () => {
@@ -50,12 +67,9 @@ const ListaColaboradores = () => {
   const [tarefasCompletas, setTarefasCompletas] = useState<Tarefa[]>([]);
   const [loadingTarefas, setLoadingTarefas] = useState(false);
 
-  // Estados para tarefas agrupadas por tipo
-  const [tarefasPendentesPorTipo, setTarefasPendentesPorTipo] = useState<
-    TarefaPorTipo[]
-  >([]);
-  const [tarefasCompletasPorTipo, setTarefasCompletasPorTipo] = useState<
-    TarefaPorTipo[]
+  // Estado para tarefas agrupadas por tipo (completas e incompletas juntas)
+  const [resumoTarefasPorTipo, setResumoTarefasPorTipo] = useState<
+    ResumoTarefasPorTipo[]
   >([]);
 
   // Calcular dados paginados
@@ -109,15 +123,16 @@ const ListaColaboradores = () => {
       setTarefasPendentes(pendentes);
       setTarefasCompletas(completas);
 
-      // Agrupar tarefas por tipo
-      setTarefasPendentesPorTipo(agruparTarefasPorTipo(pendentes));
-      setTarefasCompletasPorTipo(agruparTarefasPorTipo(completas));
+      // Agrupar tarefas completas e incompletas em um único array
+      const resumo = agruparTarefasCompletasEIncompletas(completas, pendentes);
+      setResumoTarefasPorTipo(resumo);
+      console.log(resumoTarefasPorTipo);
+      
     } catch (err) {
       console.error("Erro ao buscar tarefas:", err);
       setTarefasPendentes([]);
       setTarefasCompletas([]);
-      setTarefasPendentesPorTipo([]);
-      setTarefasCompletasPorTipo([]);
+      setResumoTarefasPorTipo([]);
     } finally {
       setLoadingTarefas(false);
     }
@@ -129,8 +144,7 @@ const ListaColaboradores = () => {
     setSelectedColaborador(null);
     setTarefasPendentes([]);
     setTarefasCompletas([]);
-    setTarefasPendentesPorTipo([]);
-    setTarefasCompletasPorTipo([]);
+    setResumoTarefasPorTipo([]);
   };
 
   if (loading) {
@@ -307,93 +321,76 @@ const ListaColaboradores = () => {
             
 
             <BarChart
-              xAxis={[{ data: ['group A', 'group B', 'group C'] }]}
-              series={[{ data: [4, 3, 5] }, { data: [1, 6, 3] }, { data: [2, 5, 6] }]}
+              xAxis={[{ data: resumoTarefasPorTipo.map(item => item.tipo) }]}
+              series={[{ data: resumoTarefasPorTipo.map(item => item.completas) }, { data: resumoTarefasPorTipo.map(item => item.incompletas) }]}
               height={300}
             />
 
 
             {/* Tarefas Completas Agrupadas por Tipo */}
             <div>
-              <h3 className="text-xl font-semibold mb-3 text-green-600">
-                📗 Tarefas Completas
+              <h3 className="text-xl font-semibold mb-3 text-blue-600">
+                 Tarefas por Tipo
               </h3>
-              {tarefasCompletasPorTipo.length === 0 ? (
+              {resumoTarefasPorTipo.length === 0 ? (
                 <p className="text-gray-500 italic">
-                  Nenhuma tarefa completa encontrada
+                  Nenhuma tarefa encontrada
                 </p>
               ) : (
-                <div className="space-y-4">
-                  <table className="min-w-full">
-                    <thead>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse border border-gray-300">
+                    <thead className="bg-blue-100">
                       <tr>
-                        <th className="text-left text-lg font-semibold mb-2">
-                          Tipo
+                        <th className="border border-gray-300 p-3 text-left font-semibold">
+                          Tipo de Tarefa
                         </th>
-                        <th className="text-right text-lg font-semibold mb-2">
-                          Quantidade
+                        <th className="border border-gray-300 p-3 text-center font-semibold text-green-700">
+                          Completas
                         </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tarefasCompletasPorTipo.map((grupo) => (
-                        <tr
-                          key={grupo.tipo}
-                          className="border border-green-400 rounded-lg p-4 bg-green-50 mb-2"
-                        >
-                          <td className="text-left text-lg font-semibold mb-2 p-1 border-r border-green-300">
-                            {grupo.tipo}
-                          </td>
-                          <td className="text-right text-lg font-semibold mb-2 p-1">
-                            {grupo.quantidade}{" "}
-                            {grupo.quantidade === 1 ? "tarefa" : "tarefas"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Tarefas Pendentes Agrupadas por Tipo */}
-            <div>
-              <h3 className="text-xl font-semibold mb-3 text-orange-600">
-                📙 Tarefas Pendentes
-              </h3>
-              {tarefasPendentesPorTipo.length === 0 ? (
-                <p className="text-gray-500 italic">
-                  Nenhuma tarefa pendente encontrada
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr className="p-4">
-                        <th className="text-left text-lg font-semibold mb-2">
-                          Tipo
+                        <th className="border border-gray-300 p-3 text-center font-semibold text-orange-700">
+                          Incompletas
                         </th>
-                        <th className="text-right text-lg font-semibold mb-2">
-                          Quantidade
+                        <th className="border border-gray-300 p-3 text-center font-semibold">
+                          Total
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tarefasPendentesPorTipo.map((grupo) => (
-                        <tr
-                          key={grupo.tipo}
-                          className="border border-orange-200 rounded-lg p-4 bg-orange-50 mb-2"
-                        >
-                          <td className="text-left text-lg font-semibold mb-2 p-1 border-r-2 border-orange-200">
-                            {grupo.tipo}
+                      {resumoTarefasPorTipo.map((item) => (
+                        <tr key={item.tipo} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 p-3 font-medium">
+                            {item.tipo}
                           </td>
-                          <td className="text-right text-lg font-semibold mb-2 p-1">
-                            {grupo.quantidade}{" "}
-                            {grupo.quantidade === 1 ? "tarefa" : "tarefas"}
+                          <td className="border border-gray-300 p-3 text-center">
+                            <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+                              {item.completas}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-3 text-center">
+                            <span className="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">
+                              {item.incompletas}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-3 text-center font-bold">
+                            {item.completas + item.incompletas}
                           </td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot className="bg-gray-100 font-bold">
+                      <tr>
+                        <td className="border border-gray-300 p-3">TOTAL</td>
+                        <td className="border border-gray-300 p-3 text-center text-green-700">
+                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.completas, 0)}
+                        </td>
+                        <td className="border border-gray-300 p-3 text-center text-orange-700">
+                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.incompletas, 0)}
+                        </td>
+                        <td className="border border-gray-300 p-3 text-center">
+                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.completas + item.incompletas, 0)}
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}
