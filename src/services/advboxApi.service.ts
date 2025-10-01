@@ -16,7 +16,15 @@ export interface Tarefa {
   date?: string;
   completed_at?: string;
   status?: string;
+  task?: string; // Nome do tipo da tarefa
   // Adicione outros campos conforme a estrutura real da API
+}
+
+// Interface para o agrupamento de tarefas por tipo
+export interface TarefaPorTipo {
+  tipo: string;
+  quantidade: number;
+  tarefas: Tarefa[];
 }
 
 // Serviço de colaboradores
