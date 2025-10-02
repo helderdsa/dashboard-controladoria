@@ -1,38 +1,5 @@
 import api from './api';
-
-// Interface para tipagem dos dados de colaboradores
-export interface Colaborador {
-  id: number;
-  name: string;
-  email: string;
-  cellphone?: string | null;
-}
-
-// Interface para tipagem das tarefas
-export interface Tarefa {
-  id: number;
-  title: string;
-  description?: string;
-  date?: string;
-  completed_at?: string;
-  status?: string;
-  task?: string; // Nome do tipo da tarefa
-  // Adicione outros campos conforme a estrutura real da API
-}
-
-// Interface para o agrupamento de tarefas por tipo
-export interface TarefaPorTipo {
-  tipo: string;
-  quantidade: number;
-  tarefas: Tarefa[];
-}
-
-// Interface para o resumo de tarefas por tipo (completas e incompletas)
-export interface ResumoTarefasPorTipo {
-  tipo: string;
-  completas: number;
-  incompletas: number;
-}
+import type { Colaborador } from '../types';
 
 // Serviço de colaboradores
 export const advboxApiService = {
@@ -52,27 +19,4 @@ export const advboxApiService = {
     const response = await api.get('/settings');
     return response.data.users;
   },
-
-  // // GET - Buscar um colaborador por ID
-  // getById: async (id: number): Promise<Colaborador> => {
-  //   const response = await api.get<Colaborador>(`/colaboradores/${id}`);
-  //   return response.data;
-  // },
-
-  // // POST - Criar um novo colaborador
-  // create: async (data: Omit<Colaborador, 'id'>): Promise<Colaborador> => {
-  //   const response = await api.post<Colaborador>('/colaboradores', data);
-  //   return response.data;
-  // },
-
-  // // PUT - Atualizar um colaborador
-  // update: async (id: number, data: Partial<Colaborador>): Promise<Colaborador> => {
-  //   const response = await api.put<Colaborador>(`/colaboradores/${id}`, data);
-  //   return response.data;
-  // },
-
-  // // DELETE - Deletar um colaborador
-  // delete: async (id: number): Promise<void> => {
-  //   await api.delete(`/colaboradores/${id}`);
-  // },
 };

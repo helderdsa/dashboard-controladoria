@@ -1,55 +1,20 @@
 import { useEffect, useState } from "react";
 import "./ListaColaboradores.css";
+import { advboxApiService } from "../../services/advboxApi.service";
 import {
-  advboxApiService,
   type Colaborador,
   type Tarefa,
   type ResumoTarefasPorTipo,
-} from "../../services/advboxApi.service";
+} from "../../types";
 import Modal from "../modal/Modal";
 import { BarChart } from "@mui/x-charts";
+import {
+  agruparTarefasCompletasEIncompletas,
+  calcularMediaDiaria,
+  calcularMediaSemanalMensal,
+} from "../../utils";
 
 const ITEMS_PER_PAGE = 10;
-
-// Função para agrupar tarefas completas e incompletas por tipo em um único array
-const agruparTarefasCompletasEIncompletas = (
-  tarefasCompletas: Tarefa[],
-  tarefasIncompletas: Tarefa[]
-): ResumoTarefasPorTipo[] => {
-  const agrupamento: Record<string, ResumoTarefasPorTipo> = {};
-
-  // Processar tarefas completas
-  tarefasCompletas.forEach((tarefa) => {
-    const tipo = tarefa.task || "Sem tipo";
-    if (!agrupamento[tipo]) {
-      agrupamento[tipo] = {
-        tipo,
-        completas: 0,
-        incompletas: 0,
-      };
-    }
-    agrupamento[tipo].completas++;
-  });
-
-  // Processar tarefas incompletas
-  tarefasIncompletas.forEach((tarefa) => {
-    const tipo = tarefa.task || "Sem tipo";
-    if (!agrupamento[tipo]) {
-      agrupamento[tipo] = {
-        tipo,
-        completas: 0,
-        incompletas: 0,
-      };
-    }
-    agrupamento[tipo].incompletas++;
-    
-  });
-
-  // Converter objeto em array e ordenar por total (decrescente)
-  return Object.values(agrupamento).sort(
-    (a, b) => b.completas + b.incompletas - (a.completas + a.incompletas)
-  );
-};
 
 const ListaColaboradores = () => {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -71,6 +36,10 @@ const ListaColaboradores = () => {
   const [resumoTarefasPorTipo, setResumoTarefasPorTipo] = useState<
     ResumoTarefasPorTipo[]
   >([]);
+
+  // Estados para médias de produtividade
+  const [mediaDiaria, setMediaDiaria] = useState<number>(0);
+  const [mediaSemanalMensal, setMediaSemanalMensal] = useState<number>(0);
 
   // Calcular dados paginados
   const totalPages = Math.ceil(colaboradores.length / ITEMS_PER_PAGE);
@@ -126,13 +95,21 @@ const ListaColaboradores = () => {
       // Agrupar tarefas completas e incompletas em um único array
       const resumo = agruparTarefasCompletasEIncompletas(completas, pendentes);
       setResumoTarefasPorTipo(resumo);
-      console.log(resumoTarefasPorTipo);
-      
+
+      // Calcular médias de produtividade
+
+      const mediaDiariaCalculada = calcularMediaDiaria(completas);
+      const mediaSemanalMensalCalculada = calcularMediaSemanalMensal(completas);
+
+      setMediaDiaria(mediaDiariaCalculada);
+      setMediaSemanalMensal(mediaSemanalMensalCalculada);
     } catch (err) {
       console.error("Erro ao buscar tarefas:", err);
       setTarefasPendentes([]);
       setTarefasCompletas([]);
       setResumoTarefasPorTipo([]);
+      setMediaDiaria(0);
+      setMediaSemanalMensal(0);
     } finally {
       setLoadingTarefas(false);
     }
@@ -145,6 +122,8 @@ const ListaColaboradores = () => {
     setTarefasPendentes([]);
     setTarefasCompletas([]);
     setResumoTarefasPorTipo([]);
+    setMediaDiaria(0);
+    setMediaSemanalMensal(0);
   };
 
   if (loading) {
@@ -318,19 +297,43 @@ const ListaColaboradores = () => {
                 </div>
               </div>
             </div>
-            
+
+            {/* Médias de Produtividade */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold mb-2 text-blue-800">
+                📈 Médias de Produtividade
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Média Diária</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {mediaDiaria}
+                  </p>
+                  <p className="text-xs text-gray-500">tarefas/dia</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Média Semanal</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {mediaSemanalMensal}
+                  </p>
+                  <p className="text-xs text-gray-500">tarefas/semana</p>
+                </div>
+              </div>
+            </div>
 
             <BarChart
-              xAxis={[{ data: resumoTarefasPorTipo.map(item => item.tipo) }]}
-              series={[{ data: resumoTarefasPorTipo.map(item => item.completas) }, { data: resumoTarefasPorTipo.map(item => item.incompletas) }]}
+              xAxis={[{ data: resumoTarefasPorTipo.map((item) => item.tipo) }]}
+              series={[
+                { data: resumoTarefasPorTipo.map((item) => item.completas) },
+                { data: resumoTarefasPorTipo.map((item) => item.incompletas) },
+              ]}
               height={300}
             />
-
 
             {/* Tarefas Completas Agrupadas por Tipo */}
             <div>
               <h3 className="text-xl font-semibold mb-3 text-blue-600">
-                 Tarefas por Tipo
+                Tarefas por Tipo
               </h3>
               {resumoTarefasPorTipo.length === 0 ? (
                 <p className="text-gray-500 italic">
@@ -381,13 +384,23 @@ const ListaColaboradores = () => {
                       <tr>
                         <td className="border border-gray-300 p-3">TOTAL</td>
                         <td className="border border-gray-300 p-3 text-center text-green-700">
-                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.completas, 0)}
+                          {resumoTarefasPorTipo.reduce(
+                            (acc, item) => acc + item.completas,
+                            0
+                          )}
                         </td>
                         <td className="border border-gray-300 p-3 text-center text-orange-700">
-                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.incompletas, 0)}
+                          {resumoTarefasPorTipo.reduce(
+                            (acc, item) => acc + item.incompletas,
+                            0
+                          )}
                         </td>
                         <td className="border border-gray-300 p-3 text-center">
-                          {resumoTarefasPorTipo.reduce((acc, item) => acc + item.completas + item.incompletas, 0)}
+                          {resumoTarefasPorTipo.reduce(
+                            (acc, item) =>
+                              acc + item.completas + item.incompletas,
+                            0
+                          )}
                         </td>
                       </tr>
                     </tfoot>
