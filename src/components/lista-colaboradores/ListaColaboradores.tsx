@@ -28,6 +28,10 @@ const ListaColaboradores = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedColaborador, setSelectedColaborador] =
     useState<Colaborador | null>(null);
+
+  // Estados para filtros de data
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [tarefasPendentes, setTarefasPendentes] = useState<Tarefa[]>([]);
   const [tarefasCompletas, setTarefasCompletas] = useState<Tarefa[]>([]);
   const [loadingTarefas, setLoadingTarefas] = useState(false);
@@ -85,7 +89,7 @@ const ListaColaboradores = () => {
     setLoadingTarefas(true);
 
     try {
-      const tarefas = await advboxApiService.getTodasTarefas(colaborador.name);
+      const tarefas = await advboxApiService.getTodasTarefas(colaborador.name, selectedYear.toString().padStart(4, '0'), selectedMonth.toString().padStart(2, '0'));
       const pendentes = tarefas.pendentes || [];
       const completas = tarefas.completas || [];
 
@@ -150,7 +154,61 @@ const ListaColaboradores = () => {
 
   return (
     <div className="lista-colaboradores">
-      <h2>Lista de Colaboradores</h2>
+      <h3>Lista de Colaboradores</h3>
+
+      {/* Filtros de Data */}
+      <div className="flex justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="flex align-middle">
+          <h2 className="font-bold text-gray-800">Selecione o período desejado</h2>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex flex-col">
+            <label htmlFor="month-select" className="text-sm font-medium text-gray-700 mb-1">
+              Mês:
+            </label>
+            <select
+              id="month-select"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={1}>Janeiro</option>
+              <option value={2}>Fevereiro</option>
+              <option value={3}>Março</option>
+              <option value={4}>Abril</option>
+              <option value={5}>Maio</option>
+              <option value={6}>Junho</option>
+              <option value={7}>Julho</option>
+              <option value={8}>Agosto</option>
+              <option value={9}>Setembro</option>
+              <option value={10}>Outubro</option>
+              <option value={11}>Novembro</option>
+              <option value={12}>Dezembro</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="year-select" className="text-sm font-medium text-gray-700 mb-1">
+              Ano:
+            </label>
+            <select
+              id="year-select"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {Array.from({ length: new Date().getFullYear() - 2020 + 1 }, (_, i) => {
+                const year = 2020 + i;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+      </div>
 
       {/* Informações de paginação */}
       <div className="flex justify-between items-center mb-4">
