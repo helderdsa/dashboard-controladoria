@@ -34,6 +34,7 @@ const ListaColaboradores = () => {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [tarefasPendentes, setTarefasPendentes] = useState<Tarefa[]>([]);
   const [tarefasCompletas, setTarefasCompletas] = useState<Tarefa[]>([]);
+  const [totalPontos, setTotalPontos] = useState<number>(0);
   const [loadingTarefas, setLoadingTarefas] = useState(false);
 
   // Estado para tarefas agrupadas por tipo (completas e incompletas juntas)
@@ -95,7 +96,7 @@ const ListaColaboradores = () => {
 
       setTarefasPendentes(pendentes);
       setTarefasCompletas(completas);
-
+      setTotalPontos(tarefas.pontosAcumulados || 0);
       // Agrupar tarefas completas e incompletas em um único array
       const resumo = agruparTarefasCompletasEIncompletas(completas, pendentes);
       setResumoTarefasPorTipo(resumo);
@@ -320,7 +321,7 @@ const ListaColaboradores = () => {
             {/* Resumo Geral */}
             <div className="bg-gray-100 p-4 rounded-lg">
               <h4 className="font-semibold mb-2">Resumo Geral</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Total de Tarefas</p>
                   <p className="text-2xl font-bold">
@@ -341,7 +342,7 @@ const ListaColaboradores = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Taxa de Conclusão</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-purple-600">
                     {tarefasCompletas.length + tarefasPendentes.length > 0
                       ? Math.round(
                           (tarefasCompletas.length /
@@ -351,6 +352,12 @@ const ListaColaboradores = () => {
                         )
                       : 0}
                     %
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total de Pontos</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {tarefasPendentes.length}
                   </p>
                 </div>
               </div>
@@ -380,10 +387,10 @@ const ListaColaboradores = () => {
             </div>
 
             <BarChart
-              xAxis={[{ data: resumoTarefasPorTipo.map((item) => item.tipo) }]}
+              xAxis={[{ data: tarefasCompletas.map((item) => item.users[0].completed) }]}
               series={[
-                { data: resumoTarefasPorTipo.map((item) => item.completas) },
-                { data: resumoTarefasPorTipo.map((item) => item.incompletas) },
+                // { data: tarefasCompletas.map((item) => item.task) },
+                { data: tarefasCompletas.map((item) => item.reward) },
               ]}
               height={300}
             />
@@ -405,14 +412,17 @@ const ListaColaboradores = () => {
                         <th className="border border-gray-300 p-3 text-left font-semibold">
                           Tipo de Tarefa
                         </th>
-                        <th className="border border-gray-300 p-3 text-center font-semibold text-green-700">
+                        <th className="border border-gray-300 p-3 text-center font-semibold text-blue-700">
                           Completas
                         </th>
                         <th className="border border-gray-300 p-3 text-center font-semibold text-orange-700">
                           Incompletas
                         </th>
-                        <th className="border border-gray-300 p-3 text-center font-semibold">
+                        <th className="dateray-300 p-3 text-center font-semibold text-indigo-700">
                           Total
+                        </th>
+                        <th className="border border-gray-300 p-3 text-center font-semibold text-green-700">
+                          Pontos
                         </th>
                       </tr>
                     </thead>
@@ -423,7 +433,7 @@ const ListaColaboradores = () => {
                             {item.tipo}
                           </td>
                           <td className="border border-gray-300 p-3 text-center">
-                            <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+                            <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
                               {item.completas}
                             </span>
                           </td>
@@ -433,7 +443,14 @@ const ListaColaboradores = () => {
                             </span>
                           </td>
                           <td className="border border-gray-300 p-3 text-center font-bold">
-                            {item.completas + item.incompletas}
+                            <span className="inline-block bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-semibold">
+                              {item.completas + item.incompletas}
+                            </span>
+                          </td>
+                          <td className="border border-gray-300 p-3 text-center font-bold">
+                            <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+                              {item.pontos}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -441,7 +458,7 @@ const ListaColaboradores = () => {
                     <tfoot className="bg-gray-100 font-bold">
                       <tr>
                         <td className="border border-gray-300 p-3">TOTAL</td>
-                        <td className="border border-gray-300 p-3 text-center text-green-700">
+                        <td className="border border-gray-300 p-3 text-center text-blue-700">
                           {resumoTarefasPorTipo.reduce(
                             (acc, item) => acc + item.completas,
                             0
@@ -453,12 +470,15 @@ const ListaColaboradores = () => {
                             0
                           )}
                         </td>
-                        <td className="border border-gray-300 p-3 text-center">
+                        <td className="border border-gray-300 p-3 text-center text-indigo-700">
                           {resumoTarefasPorTipo.reduce(
                             (acc, item) =>
                               acc + item.completas + item.incompletas,
                             0
                           )}
+                        </td>
+                        <td className="border border-gray-300 p-3 text-center text-green-700">
+                          {totalPontos}
                         </td>
                       </tr>
                     </tfoot>
