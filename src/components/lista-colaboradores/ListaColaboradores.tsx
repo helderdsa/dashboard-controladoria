@@ -417,10 +417,10 @@ const ListaColaboradores = () => {
                   }]}
                   series={[
                     { 
-                      data: dadosGraficoPorDia.map((item) => item.qtd), label: "Tarefas Concluídas"
+                      data: dadosGraficoPorDia.map((item) => item.qtd), label: "Tarefas Concluídas", minBarSize: 10
                     },
                     { 
-                      data: dadosGraficoPorDia.map((item) => item.pontos), label: "Pontos"
+                      data: dadosGraficoPorDia.map((item) => item.pontos), label: "Pontos", minBarSize: 10
                     },
                   ]}
                   barLabel={"value"}
