@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="logo" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 115.47 115.65">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0, .st1 {
+        fill: #839797;
+      }
+
+      .st1, .st2 {
+        fill-rule: evenodd;
+      }
+
+      .st2 {
+        fill: #ff9728;
+      }
+    </style>
+  </defs>
+  <polygon class="st1" points="10.88 11.54 91.8 11.54 97.55 4.49 101.98 4.49 93.34 15.21 14.43 15.1 14.43 101.44 93.49 101.44 93.49 105 10.88 105 10.88 11.54"/>
+  <polyline class="st0" points="101.98 4.49 103.09 3.1 98.67 3.1 97.55 4.49"/>
+  <polygon class="st2" points="20.67 28.76 23.51 26.44 57.37 68.07 112.29 .01 115.47 .01 115.47 115.65 0 115.65 0 .01 105.52 0 102.53 3.81 3.66 3.87 3.66 111.79 111.36 111.79 111.49 6.59 57.42 73.82 57.3 73.3 57.17 73.63 20.67 28.76"/>
+</svg>
