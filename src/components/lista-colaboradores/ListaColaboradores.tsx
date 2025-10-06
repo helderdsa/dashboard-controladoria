@@ -7,11 +7,16 @@ import {
   type ResumoTarefasPorTipo,
 } from "../../types";
 import Modal from "../modal/Modal";
-import { BarChart } from "@mui/x-charts";
+import { BarChart, barClasses, barElementClasses } from "@mui/x-charts";
 import {
   agruparTarefasCompletasEIncompletas,
   calcularMediaDiaria,
   calcularMediaSemanalMensal,
+  agruparTarefasPorDia,
+  formatarDataParaExibicao,
+  calcularMediaPorSemana,
+  type DadosPorDia,
+  type MediaPorSemana,
 } from "../../utils";
 
 const ITEMS_PER_PAGE = 10;
@@ -45,7 +50,10 @@ const ListaColaboradores = () => {
   // Estados para médias de produtividade
   const [mediaDiaria, setMediaDiaria] = useState<number>(0);
   const [mediaSemanalMensal, setMediaSemanalMensal] = useState<number>(0);
-
+  
+  // Estado para dados do gráfico por dia
+  const [dadosGraficoPorDia, setDadosGraficoPorDia] = useState<DadosPorDia[]>([]);
+  const [dadosGraficoPorSemana, setDadosGraficoPorSemana] = useState<MediaPorSemana[]>([]);
   // Calcular dados paginados
   const totalPages = Math.ceil(colaboradores.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -101,8 +109,13 @@ const ListaColaboradores = () => {
       const resumo = agruparTarefasCompletasEIncompletas(completas, pendentes);
       setResumoTarefasPorTipo(resumo);
 
-      // Calcular médias de produtividade
+      // Calcular dados do gráfico por dia
+      const dadosGrafico = agruparTarefasPorDia(completas);
+      setDadosGraficoPorDia(dadosGrafico);
 
+      const dadosGraficoSemana = calcularMediaPorSemana(dadosGrafico);
+      setDadosGraficoPorSemana(dadosGraficoSemana);
+      // Calcular médias de produtividade
       const mediaDiariaCalculada = calcularMediaDiaria(completas);
       const mediaSemanalMensalCalculada = calcularMediaSemanalMensal(completas);
 
@@ -113,6 +126,7 @@ const ListaColaboradores = () => {
       setTarefasPendentes([]);
       setTarefasCompletas([]);
       setResumoTarefasPorTipo([]);
+      setDadosGraficoPorDia([]);
       setMediaDiaria(0);
       setMediaSemanalMensal(0);
     } finally {
@@ -127,6 +141,7 @@ const ListaColaboradores = () => {
     setTarefasPendentes([]);
     setTarefasCompletas([]);
     setResumoTarefasPorTipo([]);
+    setDadosGraficoPorDia([]);
     setMediaDiaria(0);
     setMediaSemanalMensal(0);
   };
@@ -250,7 +265,7 @@ const ListaColaboradores = () => {
                   {colaborador.name}
                 </td>
                 <td className="border-2 border-gray-200 p-2">
-                  {colaborador.email ? colaborador.email : "N/A"}
+                  {colaborador.email ? colaborador.email.toLowerCase() : "N/A"}
                 </td>
                 <td className="border-2 border-gray-200 p-2">
                   {colaborador.cellphone ? colaborador.cellphone : "N/A"}
@@ -344,7 +359,7 @@ const ListaColaboradores = () => {
                   <p className="text-sm text-gray-600">Taxa de Conclusão</p>
                   <p className="text-2xl font-bold text-purple-600">
                     {tarefasCompletas.length + tarefasPendentes.length > 0
-                      ? Math.round(
+                      ? Math.floor(
                           (tarefasCompletas.length /
                             (tarefasCompletas.length +
                               tarefasPendentes.length)) *
@@ -357,7 +372,7 @@ const ListaColaboradores = () => {
                 <div>
                   <p className="text-sm text-gray-600">Total de Pontos</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {tarefasPendentes.length}
+                    {totalPontos}
                   </p>
                 </div>
               </div>
@@ -386,14 +401,69 @@ const ListaColaboradores = () => {
               </div>
             </div>
 
-            <BarChart
-              xAxis={[{ data: tarefasCompletas.map((item) => item.users[0].completed) }]}
-              series={[
-                // { data: tarefasCompletas.map((item) => item.task) },
-                { data: tarefasCompletas.map((item) => item.reward) },
-              ]}
-              height={300}
-            />
+            {/* Gráfico de Tarefas por Dia */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <h4 className="font-semibold mb-4 text-gray-800">
+                📊 Tarefas Concluídas/Pontos acumulados por Dia
+              </h4>
+              {dadosGraficoPorDia.length > 0 ? (
+              
+                <BarChart
+                  xAxis={[{ 
+                    data: dadosGraficoPorDia.map((item) => formatarDataParaExibicao(item.date)),
+                    tickLabelStyle: {
+                      fontSize: 10,
+                    },
+                  }]}
+                  series={[
+                    { 
+                      data: dadosGraficoPorDia.map((item) => item.qtd), label: "Tarefas Concluídas"
+                    },
+                    { 
+                      data: dadosGraficoPorDia.map((item) => item.pontos), label: "Pontos"
+                    },
+                  ]}
+                  barLabel={"value"}
+                  height={500}
+                />
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  Nenhum dado disponível para o gráfico
+                </p>
+              )}
+            </div>
+
+              {/* Gráfico de Pontos por semana */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <h4 className="font-semibold mb-4 text-gray-800">
+                📊 Média de pontos acumulados por Semana
+              </h4>
+              {dadosGraficoPorSemana.length > 0 ? (
+
+                <BarChart
+                  xAxis={[{
+                    data: dadosGraficoPorSemana.map((item) => item.semana),
+                    tickLabelStyle: {
+                      fontSize: 10,
+                    },
+                  }]}
+                  series={[
+                    {
+                      data: dadosGraficoPorSemana.map((item) => item.media), label: "Pontos Acumulados"
+                    }
+                  ]}
+                  barLabel={"value"}
+                  height={300}
+                  sx={{
+                    [`& .${barClasses.series}[data-series] .${barElementClasses.root}`]: {fill: '#ffb422'},
+                  }}
+                />
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  Nenhum dado disponível para o gráfico
+                </p>
+              )}
+            </div>
 
             {/* Tarefas Completas Agrupadas por Tipo */}
             <div>
