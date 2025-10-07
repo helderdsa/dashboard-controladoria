@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   PieChart,
   Pie,
   Cell,
@@ -164,7 +163,7 @@ function splitPendencias(raw: any): string[] {
 }
 
 /* -------------------- Component -------------------- */
-export default function NovaPagina() { // Alterado de RelatorioCadastros para NovaPagina
+export default function RelatorioNovosCadastros() { // Alterado de RelatorioCadastros para NovaPagina
   // ...existing code...
 
   // ...existing code...

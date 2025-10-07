@@ -25,9 +25,9 @@ const Navbar = () => {
           </Link>
           
           <Link
-            to="/nova-pagina"
+            to="/relatorio-novos-cadastros"
             className={`navbar-link px-4 py-2 rounded transition-colors ${
-              location.pathname === '/nova-pagina' 
+              location.pathname === '/relatorio-novos-cadastros' 
                 ? 'bg-blue-800 text-white' 
                 : 'text-blue-100 hover:bg-blue-700 hover:text-white'
             }`}

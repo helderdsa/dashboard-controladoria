@@ -2,7 +2,7 @@ import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/navbar/Navbar.tsx'
 import ListaColaboradores from './components/lista-colaboradores/ListaColaboradores'
-import NovaPagina from './pages/NovaPagina'
+import RelatorioNovosCadastros from './pages/RelatorioNovosCadastros.tsx'
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
         <main className="container mx-auto py-6">
           <Routes>
             <Route path="/" element={<ListaColaboradores />} />
-            <Route path="/nova-pagina" element={<NovaPagina />} />
+            <Route path="/relatorio-novos-cadastros" element={<RelatorioNovosCadastros />} />
           </Routes>
         </main>
       </div>
