@@ -20,6 +20,7 @@ export const agruparTarefasCompletasEIncompletas = (
         tipo,
         completas: 0,
         incompletas: 0,
+        pontos: tarefa.reward || 0
       };
     }
     agrupamento[tipo].completas++;
@@ -33,6 +34,7 @@ export const agruparTarefasCompletasEIncompletas = (
         tipo,
         completas: 0,
         incompletas: 0,
+        pontos: tarefa.reward || 0
       };
     }
     agrupamento[tipo].incompletas++;
