@@ -32,7 +32,7 @@ const Navbar = () => {
                 : 'text-blue-100 hover:bg-blue-700 hover:text-white'
             }`}
           >
-            Nova Página
+            Relatorio Novos Cadastros
           </Link>
         </div>
       </div>
