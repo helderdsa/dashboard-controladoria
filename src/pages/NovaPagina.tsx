@@ -1,8 +1,4 @@
-// Arquivo: NovaPagina.tsx (ou o nome do seu arquivo)
 
-// Adição do CDN do Tailwind CSS para garantir o visual da prévia.
-// Note: No ambiente Canvas, o Tailwind é frequentemente injetado automaticamente, mas
-// garantimos a presença aqui para ambientes que exigem o script explícito.
 import React, { useRef, useState, useEffect } from "react";
 
 // A biblioteca Recharts é carregada internamente.
@@ -13,7 +9,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   PieChart,
   Pie,
   Cell,
@@ -260,7 +255,7 @@ export default function NovaPagina() { // Alterado de RelatorioCadastros para No
         console.log("Cabeçalhos normalizados:", headers.map(normalizeHeader));
       }
 
-      const mapped: Cliente[] = raw.map((row, idx) => {
+  const mapped: Cliente[] = raw.map((row) => {
         const out: Cliente = { raw: row };
         Object.entries(row).forEach(([h, v]) => {
           const nh = normalizeHeader(h);
@@ -386,50 +381,137 @@ export default function NovaPagina() { // Alterado de RelatorioCadastros para No
 
   /* --------------- Export to PDF --------------- */
   const exportPDF = async () => {
-    if (!reportRef.current || typeof jsPDF === 'undefined' || typeof html2canvas === 'undefined') {
-        console.error("Bibliotecas de PDF ou HTML2Canvas não estão prontas.");
+    if (!reportRef.current) {
+      console.error("Elemento de relatório não encontrado.");
+      return;
+    }
+
+    // Tenta localizar as bibliotecas a partir de diferentes nomes globais possíveis
+    const win = window as any;
+  let Html2Canvas = (win.html2canvas || (typeof html2canvas !== 'undefined' && html2canvas));
+  let jspdfGlobal = (win.jspdf || win.jsPDF || (typeof jsPDF !== 'undefined' && jsPDF));
+  let JsPDFClass = jspdfGlobal ? (jspdfGlobal.jsPDF || jspdfGlobal) : undefined;
+
+    if (!Html2Canvas || !JsPDFClass) {
+      // tenta carregar dinamicamente via import()
+      try {
+        if (!Html2Canvas) {
+          const mod = await import('html2canvas');
+          // pacote exporta função default
+          (win as any).html2canvas = mod.default || mod;
+        }
+        if (!JsPDFClass) {
+          const mod = await import('jspdf');
+          (win as any).jsPDF = mod.default || mod;
+        }
+      } catch (e) {
+        console.error("Falha ao importar dinamicamente html2canvas/jspdf:", e);
+      }
+
+      // Re-resolve
+      const Html2Canvas2 = (win.html2canvas || (typeof html2canvas !== 'undefined' && html2canvas));
+      const jspdfGlobal2 = (win.jspdf || win.jsPDF || (typeof jsPDF !== 'undefined' && jsPDF));
+      const JsPDFClass2 = jspdfGlobal2 ? (jspdfGlobal2.jsPDF || jspdfGlobal2) : undefined;
+
+      if (!Html2Canvas2 || !JsPDFClass2) {
+        console.error("Bibliotecas de PDF ou HTML2Canvas não estão prontas após tentativa de import dinâmica.", { Html2Canvas2, JsPDFClass2 });
         return;
+      }
+
+      // re-assign as resolved implementations
+      (Html2Canvas as any) = Html2Canvas2;
+      (JsPDFClass as any) = JsPDFClass2;
     }
-    const element = reportRef.current;
-    // scale for better resolution
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    
-    // jsPDF é globalmente disponível aqui
-    const { jsPDF: JsPDFClass } = jsPDF;
-    const pdf = new JsPDFClass("p", "mm", "a4");
-    
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 8;
-    const imgWidth = pageWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = margin;
+    // Clona o elemento do relatório para aplicar estilos específicos para impressão
+    const original = reportRef.current;
+    const clone = original.cloneNode(true) as HTMLElement;
+    // Aplica estilos de impressão para garantir fundo branco e boa largura
+    clone.style.boxSizing = "border-box";
+    clone.style.background = "#ffffff";
+    clone.style.padding = "20px";
+    clone.style.width = "1100px"; // força uma largura para captura de alta qualidade
+    clone.style.maxWidth = "1100px";
+    clone.style.margin = "0 auto";
 
-    pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight - margin * 2;
+    // Insere um header com título e data
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.padding = "12px 8px";
+    header.style.borderBottom = "1px solid #e5e7eb";
+    header.innerHTML = `
+      <div style="font-family: Arial, Helvetica, sans-serif;">
+        <div style="font-size:18px;font-weight:700;color:#111827;">Relatório de Cadastros</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:4px">Gerado em: ${new Date().toLocaleString()}</div>
+      </div>
+      <div style="text-align:right; font-family: Arial, Helvetica, sans-serif; color:#6b7280; font-size:12px">Total: ${total}</div>
+    `;
+    clone.insertBefore(header, clone.firstChild);
 
-    while (heightLeft > 0) {
-      pdf.addPage();
-      position = - (imgHeight - (heightLeft + margin)); // Ajuste de posição para a próxima página
-      pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+    // Append off-screen, capture, then remove
+    clone.style.position = "absolute";
+    clone.style.left = "-9999px";
+    clone.style.top = "0";
+    document.body.appendChild(clone);
+
+    try {
+      // Captura em alta resolução
+  const canvas = await Html2Canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new JsPDFClass("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10; // mm
+
+      // calcula tamanho da imagem em mm mantendo proporção
+      const pxToMm = (px: number) => (px * 25.4) / 96; // assume 96 DPI
+      const imgProps = { width: pxToMm(canvas.width), height: pxToMm(canvas.height) };
+      const availableWidth = pageWidth - margin * 2;
+      const ratio = Math.min(availableWidth / imgProps.width, 1);
+      const renderWidth = imgProps.width * ratio;
+      const renderHeight = imgProps.height * ratio;
+
+      let heightLeft = renderHeight;
+      let position = margin;
+
+      // Adiciona primeiro pedaço
+      pdf.addImage(imgData, "PNG", margin, position, renderWidth, renderHeight);
       heightLeft -= pageHeight - margin * 2;
+
+      // Paginação: quando sobra, adiciona páginas com deslocamento
+      while (heightLeft > 0) {
+        pdf.addPage();
+        const y = position - (renderHeight - (heightLeft + margin));
+        pdf.addImage(imgData, "PNG", margin, y, renderWidth, renderHeight);
+        heightLeft -= pageHeight - margin * 2;
+      }
+
+      // Footer com fonte leve
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(9);
+        pdf.setTextColor(99, 102, 110);
+        pdf.text(`Página ${i} de ${pageCount}`, pageWidth - margin - 40, pageHeight - 8);
+      }
+
+      pdf.save("relatorio_cadastros.pdf");
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+    } finally {
+      // limpa o clone do DOM
+      document.body.removeChild(clone);
     }
-    pdf.save("relatorio_cadastros.pdf");
   };
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28BFF", "#FF6B8A"];
 
   return (
   <div className="p-0 bg-gray-50 min-h-screen font-sans w-full min-h-[100vh] overflow-x-hidden px-4 md:px-8">
-      {/* Script do Tailwind CSS para garantir o estilo */}
-      <script src="https://cdn.tailwindcss.com"></script>
-      {/* Scripts CDN para o ambiente de arquivo único */}
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  {/* Scripts são carregados dinamicamente via useEffect (Tailwind, XLSX, jsPDF, html2canvas) */}
 
   <h1 className="text-3xl font-extrabold mb-6 text-gray-800 border-b pb-2 w-full">Relatório de Cadastros</h1>
 
@@ -498,7 +580,7 @@ export default function NovaPagina() { // Alterado de RelatorioCadastros para No
                   <BarChart data={comparacaoEstados} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                     <XAxis dataKey="estado" stroke="#333" className="text-xs" />
                     <YAxis stroke="#333" className="text-xs" allowDecimals={false} />
-                    <Tooltip formatter={(value, name, props) => [value, `Estado: ${(props && props.payload && props.payload.estado) || ''}`]} labelFormatter={label => `Estado: ${label}`} />
+                    <Tooltip formatter={(value, _name, props) => [value, `Estado: ${(props && props.payload && props.payload.estado) || ''}`]} labelFormatter={label => `Estado: ${label}`} />
                     <Bar dataKey="total" fill="#f59e42" radius={[10, 10, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -513,8 +595,8 @@ export default function NovaPagina() { // Alterado de RelatorioCadastros para No
                     <XAxis dataKey="tipo" stroke="#333" className="text-xs" />
                     <YAxis stroke="#333" className="text-xs" allowDecimals={false} />
                     <Tooltip
-                      formatter={(value, name, props) => {
-                        // value = número de cadastros, name = 'value', props.payload.name = cidade
+                      formatter={(value, _name, props) => {
+                        // value = número de cadastros, props.payload.name = cidade
                         return [value, `Cidade: ${(props && props.payload && props.payload.name) || ''}`];
                       }}
                       labelFormatter={(label) => `Cidade: ${label}`}
@@ -636,6 +718,20 @@ export default function NovaPagina() { // Alterado de RelatorioCadastros para No
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
+            </button>
+            <button
+              onClick={() => {
+                const win = window as any;
+                console.log('isLibraryReady:', isLibraryReady);
+                console.log('window.html2canvas:', !!win.html2canvas);
+                console.log('window.jspdf:', !!win.jspdf);
+                console.log('window.jsPDF:', !!win.jsPDF);
+                console.log('global html2canvas variable:', typeof (html2canvas as any) !== 'undefined');
+                console.log('global jsPDF variable:', typeof (jsPDF as any) !== 'undefined');
+              }}
+              className="px-4 py-3 bg-gray-200 text-gray-800 rounded-xl shadow-md hover:bg-gray-300 transition duration-150 ease-in-out font-semibold"
+            >
+              Debug libs
             </button>
           </div>
         </>
