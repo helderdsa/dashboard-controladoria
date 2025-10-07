@@ -14,5 +14,18 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
       }
     }
+  },
+  preview: {
+    port: parseInt(process.env.PORT || '3000'),
+    host: '0.0.0.0',
+    allowedHosts: ['dashboard-controladoria-production.up.railway.app'],
+    proxy: {
+      '/api': {
+        target: 'https://app.advbox.com.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
+      }
+    }
   }
 })

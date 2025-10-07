@@ -14,26 +14,20 @@ const buscarTodasTarefasComPaginacao = async (endpoint: string): Promise<Tarefa[
     
     try {
       const url = `${endpoint}&offset=${offset}`;
-      console.log(url);
-      
+
       const response = await api.get(url);
       const tarefas = response.data.data;
-      console.log(`total de tarefas atual: ${tarefas.length}`);
       
       if (!tarefas || tarefas.length === 0) {
-        console.log(`✅ Todas as tarefas foram buscadas após ${tentativa} tentativas.`);
         
         break; // Não há mais tarefas para buscar
       }
-      console.log(`✅ Página ${tentativa}: ${tarefas.length} tarefas buscadas.`);
       
       todasTarefas.push(...tarefas);
       
-      console.log(`🔄 Total acumulado de tarefas: ${todasTarefas.length}`);
       
       // Se retornou menos que o limite, chegamos ao fim
       if (tarefas.length < limite) {
-        console.log(`✅ Todas as tarefas foram buscadas após ${tentativa} tentativas.`);
         break;
       }
       
@@ -63,7 +57,9 @@ export const advboxApiService = {
     ]);
     
 
-    return { pendentes, completas };
+    const pontosAcumulados = completas.reduce((acc, tarefa) => acc + (tarefa.reward || 0), 0);
+
+    return { pendentes, completas, pontosAcumulados };
   },
 
   // GET - Buscar todos os colaboradores

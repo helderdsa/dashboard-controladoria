@@ -18,6 +18,7 @@ export interface User {
 // Interface para tipagem das tarefas
 export interface Tarefa {
   id: number;
+  reward: number | null;
   description?: string;
   date?: string;
   task?: string; // Nome do tipo da tarefa
@@ -37,4 +38,5 @@ export interface ResumoTarefasPorTipo {
   tipo: string;
   completas: number;
   incompletas: number;
+  pontos?: number; // Opcional, caso queira somar pontos por tipo
 }
