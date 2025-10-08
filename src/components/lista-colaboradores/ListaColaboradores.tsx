@@ -241,8 +241,8 @@ const ListaColaboradores = () => {
       <table className="w-full bg-white shadow-lg rounded-lg overflow-hidden">
         <thead className="bg-gray-200 p-4">
           <tr>
-            <th className="text-center w-4/5">Nome</th>
-            <th className="text-center w-1/5">Ver Dados</th>
+            <th className="text-center w-11/12">Nome</th>
+            <th className="text-center w-1/12">Ver Dados</th>
           </tr>
         </thead>
         <tbody>
@@ -255,10 +255,10 @@ const ListaColaboradores = () => {
           ) : (
             currentColaboradores.map((colaborador) => (
               <tr key={colaborador.id} className="hover:bg-gray-100">
-                <td className="border-2 border-gray-200 p-2 w-4/5">
+                <td className="border-2 border-gray-200 p-2 font-bold">
                   {colaborador.name}
                 </td>
-                <td className="border-2 border-gray-200 p-2 text-center w-1/5">
+                <td className="border-2 border-gray-200 p-2 text-center">
                   <button
                     onClick={() => handleVerDados(colaborador)}
                     className="px-4 py-2 text-white font-semibold cursor-pointer bg-blue-500 hover:bg-blue-600 rounded transition-colors"
