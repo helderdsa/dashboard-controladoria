@@ -19,7 +19,7 @@ import {
   type MediaPorSemana,
 } from "../../utils";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 
 const ListaColaboradores = () => {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -241,11 +241,8 @@ const ListaColaboradores = () => {
       <table className="w-full bg-white shadow-lg rounded-lg overflow-hidden">
         <thead className="bg-gray-200 p-4">
           <tr>
-            <th>Id</th>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Telefone</th>
-            <th>Ver Dados</th>
+            <th className="text-center w-4/5">Nome</th>
+            <th className="text-center w-1/5">Ver Dados</th>
           </tr>
         </thead>
         <tbody>
@@ -257,20 +254,11 @@ const ListaColaboradores = () => {
             </tr>
           ) : (
             currentColaboradores.map((colaborador) => (
-              <tr key={colaborador.id}>
-                <td className="border-2 border-gray-200 p-2">
-                  {colaborador.id}
-                </td>
-                <td className="border-2 border-gray-200 p-2">
+              <tr key={colaborador.id} className="hover:bg-gray-100">
+                <td className="border-2 border-gray-200 p-2 w-4/5">
                   {colaborador.name}
                 </td>
-                <td className="border-2 border-gray-200 p-2">
-                  {colaborador.email ? colaborador.email.toLowerCase() : "N/A"}
-                </td>
-                <td className="border-2 border-gray-200 p-2">
-                  {colaborador.cellphone ? colaborador.cellphone : "N/A"}
-                </td>
-                <td className="border-2 border-gray-200 p-2 text-center">
+                <td className="border-2 border-gray-200 p-2 text-center w-1/5">
                   <button
                     onClick={() => handleVerDados(colaborador)}
                     className="px-4 py-2 text-white font-semibold cursor-pointer bg-blue-500 hover:bg-blue-600 rounded transition-colors"
