@@ -40,7 +40,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`sidebar h-screen bg-blue-600 text-white shadow-lg transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} ${isMobile && !isCollapsed ? 'mobile-open' : ''}`}>
+    <div className={`sidebar bg-blue-600 text-white shadow-lg transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} ${isMobile && !isCollapsed ? 'mobile-open' : ''}`}>
       {/* Header */}
       <div className="sidebar-header p-4 border-b border-blue-500">
         <div className="flex items-center justify-between">
