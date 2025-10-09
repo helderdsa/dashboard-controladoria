@@ -395,9 +395,8 @@ const ListaColaboradores = () => {
                 📊 Tarefas Concluídas/Pontos acumulados por Dia
               </h4>
               {dadosGraficoPorDia.length > 0 ? (
-              
                 <BarChart
-                  xAxis={[{ 
+                  xAxis={[{
                     data: dadosGraficoPorDia.map((item) => formatarDataParaExibicao(item.date)),
                     tickLabelStyle: {
                       fontSize: 10,
