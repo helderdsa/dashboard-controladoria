@@ -149,7 +149,6 @@ const ListaColaboradores = () => {
   if (loading) {
     return (
       <div className="lista-colaboradores">
-        <h2>Lista de Colaboradores</h2>
         <div className="text-center p-8">
           <p>Carregando...</p>
         </div>
@@ -160,7 +159,6 @@ const ListaColaboradores = () => {
   if (error) {
     return (
       <div className="lista-colaboradores">
-        <h2>Lista de Colaboradores</h2>
         <div className="text-center p-8 text-red-500">
           <p>{error}</p>
         </div>
@@ -170,12 +168,11 @@ const ListaColaboradores = () => {
 
   return (
     <div className="lista-colaboradores">
-      <h3>Lista de Colaboradores</h3>
 
       {/* Filtros de Data */}
       <div className="flex justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex align-middle">
-          <h2 className="font-bold text-gray-800">Selecione o período desejado</h2>
+          <h2 className="font-bold text-gray-800">Relatório de Produtividade</h2>
         </div>
         <div className="flex gap-4">
           <div className="flex flex-col">

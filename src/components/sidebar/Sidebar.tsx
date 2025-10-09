@@ -29,7 +29,7 @@ const Sidebar = () => {
   const menuItems = [
     {
       path: '/',
-      title: 'Lista de Colaboradores',
+      title: 'Relatório de Produtividade',
       icon: '👥'
     },
     {
