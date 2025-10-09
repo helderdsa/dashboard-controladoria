@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import "./ListaColaboradores.css";
-import { advboxApiService } from "../../services/advboxApi.service";
+import { advboxApiService } from "../services/advboxApi.service";
 import {
   type Colaborador,
   type Tarefa,
   type ResumoTarefasPorTipo,
-} from "../../types";
-import Modal from "../modal/Modal";
+} from "../types";
+import Modal from "../components/modal/Modal";
 import { BarChart, barClasses, barElementClasses } from "@mui/x-charts";
 import {
   agruparTarefasCompletasEIncompletas,
@@ -17,7 +16,7 @@ import {
   calcularMediaPorSemana,
   type DadosPorDia,
   type MediaPorSemana,
-} from "../../utils";
+} from "../utils";
 
 const ITEMS_PER_PAGE = 20;
 

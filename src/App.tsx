@@ -1,7 +1,7 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/sidebar/Sidebar.tsx'
-import ListaColaboradores from './components/lista-colaboradores/ListaColaboradores'
+import ListaColaboradores from './pages/ListaColaboradores.tsx'
 import RelatorioNovosCadastros from './pages/RelatorioNovosCadastros.tsx'
 
 function App() {
