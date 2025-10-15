@@ -1,4 +1,5 @@
 import { type Tarefa } from '../types';
+import type { PeticaoInicial } from '../types';
 
 /**
  * Calcula a média diária de tarefas completas
@@ -58,4 +59,156 @@ export const calcularMediaSemanalMensal = (tarefasCompletas: Tarefa[]): number =
 
   const totalTarefas = Object.values(tarefasPorSemana).reduce((acc, count) => acc + count, 0);
   return Math.round((totalTarefas / semanas.length) * 100) / 100; // Arredondar para 2 casas decimais
+};
+
+/**
+ * Interface para médias de responsáveis
+ */
+export interface MediaResponsavel {
+  responsavel: string;
+  mediaDiaria: number;
+  mediaSemanal: number;
+  totalAnalises: number;
+  diasAtivos: number;
+  semanasAtivas: number;
+}
+
+/**
+ * Calcula médias diárias e semanais para cada responsável pela análise
+ * @param peticoes - Array de petições com dados de análise
+ * @returns Array com médias por responsável
+ */
+export const calcularMediasResponsaveis = (peticoes: PeticaoInicial[]): MediaResponsavel[] => {
+  // Filtra apenas petições com responsável e data válidos
+  const peticoesValidas = peticoes.filter(p => 
+    p.respAnalise && 
+    p.respAnalise.trim().length > 0 && 
+    p.respAnalise.toLowerCase() !== 'não informado' &&
+    p.data
+  );
+
+  // Agrupa por responsável
+  const agrupamentoPorResponsavel: Record<string, PeticaoInicial[]> = {};
+  
+  peticoesValidas.forEach(peticao => {
+    const responsavel = peticao.respAnalise!.trim();
+    if (!agrupamentoPorResponsavel[responsavel]) {
+      agrupamentoPorResponsavel[responsavel] = [];
+    }
+    agrupamentoPorResponsavel[responsavel].push(peticao);
+  });
+
+  // Calcula médias para cada responsável
+  return Object.entries(agrupamentoPorResponsavel).map(([responsavel, peticoesDoResponsavel]) => {
+    // Agrupa por dia
+    const analisesPorDia: Record<string, number> = {};
+    // Agrupa por semana
+    const analisesPorSemana: Record<string, number> = {};
+
+    peticoesDoResponsavel.forEach(peticao => {
+      if (peticao.data) {
+        // Chave do dia (YYYY-MM-DD)
+        const chaveDia = peticao.data.toISOString().split('T')[0];
+        analisesPorDia[chaveDia] = (analisesPorDia[chaveDia] || 0) + 1;
+
+        // Chave da semana (YYYY-Www - ISO week)
+        const ano = peticao.data.getFullYear();
+        const inicioAno = new Date(ano, 0, 1);
+        const diasDecorridos = Math.floor((peticao.data.getTime() - inicioAno.getTime()) / (24 * 60 * 60 * 1000));
+        const semanaDoAno = Math.ceil((diasDecorridos + inicioAno.getDay() + 1) / 7);
+        const chaveSemana = `${ano}-W${String(semanaDoAno).padStart(2, '0')}`;
+        analisesPorSemana[chaveSemana] = (analisesPorSemana[chaveSemana] || 0) + 1;
+      }
+    });
+
+    const diasAtivos = Object.keys(analisesPorDia).length;
+    const semanasAtivas = Object.keys(analisesPorSemana).length;
+    const totalAnalises = peticoesDoResponsavel.length;
+
+    // Calcula médias
+    const mediaDiaria = diasAtivos > 0 ? 
+      Math.round((totalAnalises / diasAtivos) * 100) / 100 : 0;
+    
+    const mediaSemanal = semanasAtivas > 0 ? 
+      Math.round((totalAnalises / semanasAtivas) * 100) / 100 : 0;
+
+    return {
+      responsavel,
+      mediaDiaria,
+      mediaSemanal,
+      totalAnalises,
+      diasAtivos,
+      semanasAtivas
+    };
+  }).sort((a, b) => b.totalAnalises - a.totalAnalises); // Ordena por total de análises
+};
+
+/**
+ * Calcula médias diárias e semanais para cada responsável pela petição
+ * @param peticoes - Array de petições com dados de petição
+ * @returns Array com médias por responsável pela petição
+ */
+export const calcularMediasResponsaveisPeticao = (peticoes: PeticaoInicial[]): MediaResponsavel[] => {
+  // Filtra apenas petições com responsável pela petição e data válidos
+  const peticoesValidas = peticoes.filter(p => 
+    p.respPeticao && 
+    p.respPeticao.trim().length > 0 && 
+    p.respPeticao.toLowerCase() !== 'não informado' &&
+    p.data
+  );
+
+  // Agrupa por responsável pela petição
+  const agrupamentoPorResponsavel: Record<string, PeticaoInicial[]> = {};
+  
+  peticoesValidas.forEach(peticao => {
+    const responsavel = peticao.respPeticao!.trim();
+    if (!agrupamentoPorResponsavel[responsavel]) {
+      agrupamentoPorResponsavel[responsavel] = [];
+    }
+    agrupamentoPorResponsavel[responsavel].push(peticao);
+  });
+
+  // Calcula médias para cada responsável
+  return Object.entries(agrupamentoPorResponsavel).map(([responsavel, peticoesDoResponsavel]) => {
+    // Agrupa por dia
+    const peticoesPorDia: Record<string, number> = {};
+    // Agrupa por semana
+    const peticoesPorSemana: Record<string, number> = {};
+
+    peticoesDoResponsavel.forEach(peticao => {
+      if (peticao.data) {
+        // Chave do dia (YYYY-MM-DD)
+        const chaveDia = peticao.data.toISOString().split('T')[0];
+        peticoesPorDia[chaveDia] = (peticoesPorDia[chaveDia] || 0) + 1;
+
+        // Chave da semana (YYYY-Www - ISO week)
+        const ano = peticao.data.getFullYear();
+        const inicioAno = new Date(ano, 0, 1);
+        const diasDecorridos = Math.floor((peticao.data.getTime() - inicioAno.getTime()) / (24 * 60 * 60 * 1000));
+        const semanaDoAno = Math.ceil((diasDecorridos + inicioAno.getDay() + 1) / 7);
+        const chaveSemana = `${ano}-W${String(semanaDoAno).padStart(2, '0')}`;
+        peticoesPorSemana[chaveSemana] = (peticoesPorSemana[chaveSemana] || 0) + 1;
+      }
+    });
+
+    const diasAtivos = Object.keys(peticoesPorDia).length;
+    const semanasAtivas = Object.keys(peticoesPorSemana).length;
+    const totalAnalises = peticoesDoResponsavel.length;
+
+    // Calcula médias
+    const mediaDiaria = diasAtivos > 0 ? 
+      Math.round((totalAnalises / diasAtivos) * 100) / 100 : 0;
+    
+    const mediaSemanal = semanasAtivas > 0 ? 
+      Math.round((totalAnalises / semanasAtivas) * 100) / 100 : 0;
+
+    return {
+      responsavel,
+      mediaDiaria,
+      mediaSemanal,
+      totalAnalises,
+      diasAtivos,
+      semanasAtivas
+    };
+  }).sort((a, b) => b.totalAnalises - a.totalAnalises); // Ordena por total de petições
 };
