@@ -36,6 +36,11 @@ const Sidebar = () => {
       path: '/relatorio-novos-cadastros',
       title: 'Relatório Novos Cadastros',
       icon: '📊'
+    },
+    {
+      path: '/relatorio-peticao-inicial',
+      title: 'Relatório Petição Inicial',
+      icon: '⚖️'
     }
   ];
 

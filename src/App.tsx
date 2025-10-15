@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/sidebar/Sidebar.tsx'
 import ListaColaboradores from './pages/ListaColaboradores.tsx'
 import RelatorioNovosCadastros from './pages/RelatorioNovosCadastros.tsx'
+import RelatorioPeticaoInicial from './pages/RelatorioPetiçãoInicial.tsx'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ListaColaboradores />} />
             <Route path="/relatorio-novos-cadastros" element={<RelatorioNovosCadastros />} />
+            <Route path="/relatorio-peticao-inicial" element={<RelatorioPeticaoInicial />} />
           </Routes>
         </main>
       </div>

@@ -6,6 +6,18 @@ export interface Colaborador {
   cellphone?: string | null;
 }
 
+// Interface para dados de petição inicial
+export interface PeticaoInicial {
+  data?: Date | null;
+  respAnalise?: string;
+  respPeticao?: string;
+  nomeCliente?: string;
+  acao?: string;
+  localidade?: string;
+  fase?: string;
+  observacoes?: string;
+}
+
 // Interface para dados do usuário nas tarefas
 export interface User {
   user_id: number;
