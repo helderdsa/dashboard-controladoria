@@ -510,7 +510,7 @@ export default function RelatorioNovosCadastros() { // Alterado de RelatorioCada
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28BFF", "#FF6B8A"];
 
   return (
-  <div className="p-0 bg-gray-50 min-h-screen font-sans w-full min-h-[100vh] overflow-x-hidden px-4 md:px-8">
+  <div className="p-0 bg-gray-50 font-sans w-full min-h-100 overflow-x-hidden px-4 md:px-8">
   {/* Scripts são carregados dinamicamente via useEffect (Tailwind, XLSX, jsPDF, html2canvas) */}
 
   <h1 className="text-3xl font-extrabold mb-6 text-gray-800 border-b pb-2 w-full">Relatório de Cadastros</h1>
